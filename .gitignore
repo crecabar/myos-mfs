@@ -1,0 +1,48 @@
+# Build outputs
+/build/
+/out/
+/dist/
+
+# C/C++ compilation artifacts
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.lo
+*.la
+*.d
+*.gcda
+*.gcno
+*.gcov
+
+# Filesystem / disk images
+*.img
+*.raw
+*.qcow
+*.qcow2
+*.vhd
+*.vhdx
+*.vdi
+*.iso
+
+# Generated test artifacts
+/test-output/
+/test-artifacts/
+/corpus/generated/
+
+# Generated dependency / tooling files
+compile_commands.json
+.cache/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+core
+core.*
+
+# Platform metadata
+.DS_Store
+Thumbs.db
