@@ -1,7 +1,13 @@
 # Build outputs
 /build/
+/build-*/
+/cmake-build-*/
 /out/
 /dist/
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/Testing/
 
 # C/C++ compilation artifacts
 *.o
@@ -9,6 +15,9 @@
 *.a
 *.so
 *.so.*
+*.dylib
+*.dll
+*.exe
 *.lo
 *.la
 *.d
@@ -35,14 +44,36 @@
 compile_commands.json
 .cache/
 
+# IDE/editor metadata
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+*.code-workspace
+*.sublime-workspace
+.project
+.cproject
+.settings/
+
 # Temporary files
 *.tmp
 *.swp
 *.swo
+*.bak
 *~
 core
 core.*
 
-# Platform metadata
+# macOS / Finder metadata
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100/
+.Trashes/
+.fseventsd/
+.TemporaryItems/
+
+# Other platform metadata
 Thumbs.db
+Desktop.ini
