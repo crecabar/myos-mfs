@@ -27,7 +27,11 @@ LIB_OBJS := $(patsubst lib/%.c,$(OBJ_DIR)/lib/%.o,$(LIB_SRCS))
 
 TEST_SRCS := $(shell find tests -type f -name '*_test.c' | sort)
 TEST_NAMES := $(notdir $(TEST_SRCS:.c=))
-TEST_BINS := $(addprefix $(TEST_DIR)/,$(TEST_NAMES))
+CORE_TEST_SRCS := $(shell find tests/format tests/io -type f -name '*_test.c' | sort)
+CORE_TEST_NAMES := $(notdir $(CORE_TEST_SRCS:.c=))
+
+TEST_BINS := $(addprefix $(TEST_DIR)/,$(CORE_TEST_NAMES)) \
+             $(TEST_DIR)/posix_block_device_test
 
 LIBMFS := $(LIB_DIR)/libmfs.a
 
@@ -36,17 +40,31 @@ MFS_VERSION_OBJ := $(OBJ_DIR)/tools/mfs-version/main.o
 MFS_VERSION_BIN := $(BIN_DIR)/mfs-version
 
 # -----------------------------------------------------------------------------
+# POSIX backend
+# -----------------------------------------------------------------------------
+
+POSIX_SRCS := $(shell find platform/posix -type f -name '*.c' | sort)
+POSIX_OBJS := $(patsubst platform/posix/%.c,$(OBJ_DIR)/platform/posix/%.o,$(POSIX_SRCS))
+
+POSIX_TEST_SRC := tests/platform/posix/block_device_test.c
+POSIX_TEST_OBJ := $(OBJ_DIR)/tests/platform/posix/block_device_test.o
+POSIX_TEST_BIN := $(TEST_DIR)/posix_block_device_test
+
+# -----------------------------------------------------------------------------
 # Compiler configuration
 # -----------------------------------------------------------------------------
 
 TEST_CPPFLAGS := $(CPPFLAGS) -Itests/include
 TEST_CFLAGS := $(CFLAGS) -Werror -UNDEBUG
 
+POSIX_CPPFLAGS := $(CPPFLAGS) -Iplatform/posix/include
+POSIX_TEST_CPPFLAGS := $(TEST_CPPFLAGS) -Iplatform/posix/include
+
 # -----------------------------------------------------------------------------
 # Public targets
 # -----------------------------------------------------------------------------
 
-.PHONY: all lib tools test clean help
+.PHONY: all lib tools test tests clean help
 
 all: lib tools
 
@@ -61,6 +79,8 @@ test: $(TEST_BINS)
 	    ./$$test_bin; \
 	done
 
+tests: test
+
 clean:
 	rm -rf $(BUILD_DIR)
 
@@ -70,6 +90,7 @@ help:
 	@echo "  lib    Build libmfs.a"
 	@echo "  tools  Build available host tools"
 	@echo "  test   Build and run MFS tests"
+	@echo "  tests  Alias for test"
 	@echo "  clean  Remove generated artifacts"
 	@echo "  help   Display available targets"
 
@@ -84,6 +105,14 @@ $(OBJ_DIR)/lib/%.o: lib/%.c
 $(LIBMFS): $(LIB_OBJS)
 	@mkdir -p $(dir $@)
 	$(AR) rcs $@ $^
+
+# -----------------------------------------------------------------------------
+# POSIX backend
+# -----------------------------------------------------------------------------
+
+$(OBJ_DIR)/platform/posix/%.o: platform/posix/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(POSIX_CPPFLAGS) $(CFLAGS) -Werror -MMD -MP -c $< -o $@
 
 # -----------------------------------------------------------------------------
 # Host tools
@@ -115,11 +144,20 @@ $(TEST_DIR)/block_io_test: \
 	@mkdir -p $(dir $@)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+$(POSIX_TEST_OBJ): $(POSIX_TEST_SRC)
+	@mkdir -p $(dir $@)
+	$(CC) $(POSIX_TEST_CPPFLAGS) $(TEST_CFLAGS) -MMD -MP -c $< -o $@
+
+$(POSIX_TEST_BIN): $(POSIX_TEST_OBJ) $(POSIX_OBJS) $(LIBMFS)
+	@mkdir -p $(dir $@)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
 # -----------------------------------------------------------------------------
 # Automatic header dependencies
 # -----------------------------------------------------------------------------
 
 DEPS := $(LIB_OBJS:.o=.d) \
+        $(POSIX_OBJS:.o=.d) \
         $(MFS_VERSION_OBJ:.o=.d) \
         $(patsubst tests/%.c,$(OBJ_DIR)/tests/%.d,$(TEST_SRCS))
 
