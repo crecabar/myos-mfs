@@ -3,20 +3,11 @@
  * Copyright (C) 2026 Cristian Recabarren
  */
 #include <mfs/format.h>
+#include <mfs/assert.h>
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#define MFS_TEST_ASSERT(condition)                               \
-    do {                                                         \
-        if (!(condition)) {                                      \
-            fprintf(stderr,                                      \
-                    "FAIL: %s:%d: %s\n",                         \
-                    __FILE__, __LINE__, #condition);             \
-            exit(EXIT_FAILURE);                                  \
-        }                                                        \
-    } while (0)
 
 #define TEST_VOLUME_BLOCKS UINT64_C(16384)
 #define TEST_VOLUME_BYTES \
