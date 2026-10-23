@@ -27,7 +27,7 @@ LIB_OBJS := $(patsubst lib/%.c,$(OBJ_DIR)/lib/%.o,$(LIB_SRCS))
 
 TEST_SRCS := $(shell find tests -type f -name '*_test.c' | sort)
 TEST_NAMES := $(notdir $(TEST_SRCS:.c=))
-CORE_TEST_SRCS := $(shell find tests/format tests/io -type f -name '*_test.c' | sort)
+CORE_TEST_SRCS := $(shell find tests/allocation tests/format tests/io -type f -name '*_test.c' | sort)
 CORE_TEST_NAMES := $(notdir $(CORE_TEST_SRCS:.c=))
 
 TEST_BINS := $(addprefix $(TEST_DIR)/,$(CORE_TEST_NAMES)) \
@@ -224,6 +224,11 @@ $(FSCK_TEST_OBJ): $(FSCK_TEST_SRC)
 	$(CC) $(TEST_CPPFLAGS) $(TEST_CFLAGS) -MMD -MP -c $< -o $@
 
 $(FSCK_TEST_BIN): $(FSCK_TEST_OBJ)
+	@mkdir -p $(dir $@)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+$(TEST_DIR)/geometry_test: \
+    $(OBJ_DIR)/tests/allocation/geometry_test.o $(LIBMFS)
 	@mkdir -p $(dir $@)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
