@@ -232,6 +232,11 @@ $(TEST_DIR)/geometry_test: \
 	@mkdir -p $(dir $@)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+$(TEST_DIR)/bitmap_test: \
+    $(OBJ_DIR)/tests/allocation/bitmap_test.o $(LIBMFS)
+	@mkdir -p $(dir $@)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
 # -----------------------------------------------------------------------------
 # Automatic header dependencies
 # -----------------------------------------------------------------------------
