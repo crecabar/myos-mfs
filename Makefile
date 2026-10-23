@@ -31,13 +31,22 @@ CORE_TEST_SRCS := $(shell find tests/format tests/io -type f -name '*_test.c' | 
 CORE_TEST_NAMES := $(notdir $(CORE_TEST_SRCS:.c=))
 
 TEST_BINS := $(addprefix $(TEST_DIR)/,$(CORE_TEST_NAMES)) \
-             $(TEST_DIR)/posix_block_device_test
+             $(TEST_DIR)/posix_block_device_test \
+             $(TEST_DIR)/mkfs_test
 
 LIBMFS := $(LIB_DIR)/libmfs.a
 
 MFS_VERSION_SRC := tools/mfs-version/main.c
 MFS_VERSION_OBJ := $(OBJ_DIR)/tools/mfs-version/main.o
 MFS_VERSION_BIN := $(BIN_DIR)/mfs-version
+
+MKFS_SRC := tools/mkfs.mfs/main.c
+MKFS_OBJ := $(OBJ_DIR)/tools/mkfs.mfs/main.o
+MKFS_BIN := $(BIN_DIR)/mkfs.mfs
+
+MKFS_TEST_SRC := tests/tools/mkfs.mfs/mkfs_test.c
+MKFS_TEST_OBJ := $(OBJ_DIR)/tests/tools/mkfs.mfs/mkfs_test.o
+MKFS_TEST_BIN := $(TEST_DIR)/mkfs_test
 
 # -----------------------------------------------------------------------------
 # POSIX backend
@@ -70,14 +79,16 @@ all: lib tools
 
 lib: $(LIBMFS)
 
-tools: $(MFS_VERSION_BIN)
+tools: $(MFS_VERSION_BIN) $(MKFS_BIN)
 
-test: $(TEST_BINS)
+test: $(TEST_BINS) $(MKFS_BIN)
 	@set -e; \
-	for test_bin in $(TEST_BINS); do \
+	for test_bin in $(filter-out $(MKFS_TEST_BIN),$(TEST_BINS)); do \
 	    echo "Running $$test_bin"; \
 	    ./$$test_bin; \
 	done
+	@echo "Running $(MKFS_TEST_BIN)"
+	@./$(MKFS_TEST_BIN) ./$(MKFS_BIN)
 
 tests: test
 
@@ -122,7 +133,13 @@ $(OBJ_DIR)/tools/%.o: tools/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MP -c $< -o $@
 
+$(MKFS_OBJ): CPPFLAGS += -Iplatform/posix/include
+
 $(MFS_VERSION_BIN): $(MFS_VERSION_OBJ)
+	@mkdir -p $(dir $@)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+$(MKFS_BIN): $(MKFS_OBJ) $(POSIX_OBJS) $(LIBMFS)
 	@mkdir -p $(dir $@)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
@@ -152,6 +169,14 @@ $(POSIX_TEST_BIN): $(POSIX_TEST_OBJ) $(POSIX_OBJS) $(LIBMFS)
 	@mkdir -p $(dir $@)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+$(MKFS_TEST_OBJ): $(MKFS_TEST_SRC)
+	@mkdir -p $(dir $@)
+	$(CC) $(POSIX_TEST_CPPFLAGS) $(TEST_CFLAGS) -MMD -MP -c $< -o $@
+
+$(MKFS_TEST_BIN): $(MKFS_TEST_OBJ) $(POSIX_OBJS) $(LIBMFS)
+	@mkdir -p $(dir $@)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
 # -----------------------------------------------------------------------------
 # Automatic header dependencies
 # -----------------------------------------------------------------------------
@@ -159,6 +184,7 @@ $(POSIX_TEST_BIN): $(POSIX_TEST_OBJ) $(POSIX_OBJS) $(LIBMFS)
 DEPS := $(LIB_OBJS:.o=.d) \
         $(POSIX_OBJS:.o=.d) \
         $(MFS_VERSION_OBJ:.o=.d) \
+        $(MKFS_OBJ:.o=.d) \
         $(patsubst tests/%.c,$(OBJ_DIR)/tests/%.d,$(TEST_SRCS))
 
 -include $(DEPS)
