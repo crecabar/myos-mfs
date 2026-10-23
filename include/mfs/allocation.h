@@ -5,6 +5,7 @@
 #ifndef MFS_ALLOCATION_H
 #define MFS_ALLOCATION_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 /*
@@ -41,6 +42,26 @@ struct mfs_allocation_geometry {
 enum mfs_allocation_result mfs_allocation_geometry(
     uint64_t total_blocks,
     struct mfs_allocation_geometry *geometry
+);
+
+/*
+ * Encode one block of the initial allocation bitmap.
+ *
+ * bitmap_block_index is zero-based relative to the
+ * allocation bitmap extent, not the physical volume.
+ *
+ * The output buffer must hold at least MFS_BLOCK_SIZE
+ * bytes. On success, exactly one bitmap block is encoded.
+ *
+ * On failure, the output buffer remains unchanged.
+ *
+ * No I/O, heap allocation or platform services are required.
+ */
+enum mfs_allocation_result mfs_allocation_bitmap_encode_initial_block(
+    uint8_t *buffer,
+    size_t buffer_size,
+    uint64_t total_blocks,
+    uint64_t bitmap_block_index
 );
 
 #endif /* MFS_ALLOCATION_H */
