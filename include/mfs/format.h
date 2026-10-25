@@ -18,6 +18,8 @@
 #define MFS_FORMAT_MAJOR 0
 #define MFS_FORMAT_MINOR 1
 
+#define MFS_FORMAT_V02_MINOR 2U
+
 #define MFS_BLOCK_SIZE 4096U
 #define MFS_SUPERBLOCK_BLOCK 1U
 #define MFS_SUPERBLOCK_OFFSET 4096U
@@ -90,6 +92,57 @@ enum mfs_format_result mfs_superblock_decode(
     size_t buffer_size,
     uint64_t volume_bytes,
     struct mfs_superblock *superblock
+);
+
+/*
+ * Experimental MFS on-disk format v0.2.
+ *
+ * This structure is an in-memory representation,
+ * not an on-disk ABI.
+ *
+ * Allocation metadata must match the geometry
+ * derived from total_blocks.
+ */
+struct mfs_superblock_v02 {
+    uint64_t total_blocks;
+    uint8_t volume_uuid[MFS_UUID_SIZE];
+    uint64_t allocation_start;
+    uint64_t allocation_blocks;
+};
+
+/*
+ * Encode an experimental MFS v0.2 superblock.
+ *
+ * The output buffer must hold at least MFS_BLOCK_SIZE
+ * bytes. On success, the complete block is initialized.
+ *
+ * The input object and output buffer must not overlap.
+ *
+ * On failure, the output buffer remains unchanged.
+ */
+enum mfs_format_result mfs_superblock_v02_encode(
+    uint8_t *buffer,
+    size_t buffer_size,
+    const struct mfs_superblock_v02 *superblock,
+    uint64_t volume_bytes
+);
+
+/*
+ * Decode and validate an experimental MFS v0.2
+ * superblock.
+ *
+ * The input buffer must contain a complete block.
+ * volume_bytes is the capacity of the selected volume.
+ *
+ * The input buffer and output object must not overlap.
+ *
+ * On failure, the output structure remains unchanged.
+ */
+enum mfs_format_result mfs_superblock_v02_decode(
+    const uint8_t *buffer,
+    size_t buffer_size,
+    uint64_t volume_bytes,
+    struct mfs_superblock_v02 *superblock
 );
 
 #endif /* MFS_FORMAT_H */

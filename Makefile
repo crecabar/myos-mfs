@@ -190,6 +190,11 @@ $(TEST_DIR)/superblock_test: \
 	@mkdir -p $(dir $@)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+$(TEST_DIR)/superblock_v02_test: \
+    $(OBJ_DIR)/tests/format/superblock_v02_test.o $(LIBMFS)
+	@mkdir -p $(dir $@)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
 $(TEST_DIR)/block_io_test: \
     $(OBJ_DIR)/tests/io/block_io_test.o $(LIBMFS)
 	@mkdir -p $(dir $@)
